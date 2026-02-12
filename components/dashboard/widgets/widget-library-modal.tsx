@@ -1,9 +1,9 @@
 "use client";
 
-import { Component, useState, useRef, useCallback, type ReactNode } from "react";
+import { Component, useState, useMemo, useRef, useCallback, type ReactNode } from "react";
 import { Drawer } from "vaul";
 import { Button } from "@/components/ui/button";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, Search, X } from "lucide-react";
 import {
   widgetRegistry,
   widgetGroups,
@@ -143,13 +143,28 @@ export function WidgetLibraryDrawer({ trigger }: WidgetLibraryDrawerProps) {
   const [open, setOpen] = useState(false);
   const [justAdded, setJustAdded] = useState<string | null>(null);
   const [activeGroup, setActiveGroup] = useState<WidgetGroup | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const addWidget = useWidgetLayoutStore((s) => s.addWidget);
-  const layouts = useWidgetLayoutStore((s) => s.layouts);
+  const views = useWidgetLayoutStore((s) => s.views);
+  const activeViewId = useWidgetLayoutStore((s) => s.activeViewId);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Get layouts from the active view
+  const activeLayouts = useMemo(() => {
+    const view = views.find((v) => v.id === activeViewId);
+    return view?.layouts ?? [];
+  }, [views, activeViewId]);
+
+  // Active view name for header
+  const activeViewName = useMemo(() => {
+    const view = views.find((v) => v.id === activeViewId);
+    return view?.name ?? "Dashboard";
+  }, [views, activeViewId]);
 
   const getWidgetCount = (widgetId: string) =>
-    layouts.filter((l) => l.widgetId === widgetId).length;
+    activeLayouts.filter((l) => l.widgetId === widgetId).length;
 
   const handleAdd = (def: WidgetDefinition) => {
     addWidget(def.id);
@@ -157,14 +172,41 @@ export function WidgetLibraryDrawer({ trigger }: WidgetLibraryDrawerProps) {
     setTimeout(() => setJustAdded(null), 1200);
   };
 
-  // Group widgets by domain (only groups that have widgets)
-  const sections = Object.entries(widgetGroups)
-    .map(([key, meta]) => ({
-      key: key as WidgetGroup,
-      label: meta.label,
-      widgets: Object.values(widgetRegistry).filter((w) => w.group === key),
-    }))
-    .filter((group) => group.widgets.length > 0);
+  // Normalised search token
+  const searchNorm = searchQuery.trim().toLowerCase();
+
+  // Group widgets by domain (only groups that have widgets), filtered by search
+  const sections = useMemo(() => {
+    return Object.entries(widgetGroups)
+      .map(([key, meta]) => {
+        const allWidgets = Object.values(widgetRegistry).filter(
+          (w) => w.group === key
+        );
+
+        const widgets = searchNorm
+          ? allWidgets.filter(
+              (w) =>
+                w.label.toLowerCase().includes(searchNorm) ||
+                w.description.toLowerCase().includes(searchNorm) ||
+                w.id.toLowerCase().includes(searchNorm)
+            )
+          : allWidgets;
+
+        return {
+          key: key as WidgetGroup,
+          label: meta.label,
+          widgets,
+          totalCount: allWidgets.length,
+        };
+      })
+      .filter((group) => group.widgets.length > 0);
+  }, [searchNorm]);
+
+  // Total search results
+  const totalResults = useMemo(
+    () => sections.reduce((sum, s) => sum + s.widgets.length, 0),
+    [sections]
+  );
 
   // Scroll to a specific section
   const scrollToSection = useCallback((groupKey: WidgetGroup) => {
@@ -202,8 +244,20 @@ export function WidgetLibraryDrawer({ trigger }: WidgetLibraryDrawerProps) {
     else sectionRefs.current.delete(key);
   }, []);
 
+  const clearSearch = () => {
+    setSearchQuery("");
+    searchInputRef.current?.focus();
+  };
+
   return (
-    <Drawer.Root open={open} onOpenChange={setOpen} direction="bottom">
+    <Drawer.Root
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) setSearchQuery("");
+      }}
+      direction="bottom"
+    >
       <Drawer.Trigger asChild>
         {trigger ?? (
           <Button variant="outline" size="sm" className="h-8 gap-1.5">
@@ -225,8 +279,40 @@ export function WidgetLibraryDrawer({ trigger }: WidgetLibraryDrawerProps) {
               Widgets
             </Drawer.Title>
             <Drawer.Description className="text-xs text-muted-foreground">
-              Tap a widget to add it to your dashboard
+              Adding to <span className="font-medium text-foreground">{activeViewName}</span>
             </Drawer.Description>
+          </div>
+
+          {/* ── Search bar ──────────────────────────────────────── */}
+          <div className="px-6 pb-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search widgets…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={cn(
+                  "h-9 w-full rounded-lg border bg-muted/30 pl-9 pr-8 text-sm outline-none",
+                  "placeholder:text-muted-foreground/60",
+                  "focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-all"
+                )}
+              />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 flex size-5 items-center justify-center rounded-full hover:bg-muted transition-colors"
+                >
+                  <X className="size-3" />
+                </button>
+              )}
+            </div>
+            {searchNorm && (
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                {totalResults} widget{totalResults !== 1 ? "s" : ""} found
+              </p>
+            )}
           </div>
 
           {/* ── Body: sidebar + content ─────────────────────────── */}
@@ -260,6 +346,13 @@ export function WidgetLibraryDrawer({ trigger }: WidgetLibraryDrawerProps) {
                   </button>
                 );
               })}
+
+              {/* No results in sidebar */}
+              {sections.length === 0 && searchNorm && (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-xs text-muted-foreground">No matches</p>
+                </div>
+              )}
             </nav>
 
             {/* ── Scrollable widget groups ──────────────────────── */}
@@ -284,6 +377,11 @@ export function WidgetLibraryDrawer({ trigger }: WidgetLibraryDrawerProps) {
                         )}
                       >
                         {group.label}
+                        {searchNorm && (
+                          <span className="ml-2 text-muted-foreground font-normal normal-case tracking-normal">
+                            ({group.widgets.length} of {group.totalCount})
+                          </span>
+                        )}
                       </h3>
                       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {group.widgets.map((def) => (
@@ -299,6 +397,22 @@ export function WidgetLibraryDrawer({ trigger }: WidgetLibraryDrawerProps) {
                     </section>
                   );
                 })}
+
+                {/* Empty search state */}
+                {sections.length === 0 && searchNorm && (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="flex size-12 items-center justify-center rounded-xl bg-muted mb-3">
+                      <Search className="size-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-medium mb-1">No widgets found</p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      No widgets match &ldquo;{searchQuery}&rdquo;
+                    </p>
+                    <Button variant="outline" size="sm" onClick={clearSearch}>
+                      Clear search
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
