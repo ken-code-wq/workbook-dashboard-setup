@@ -120,3 +120,140 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ── react-grid-layout core styles ─────────────────────────────────────── */
+
+.react-grid-layout {
+  position: relative;
+  transition: height 200ms ease;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, width, height;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform, width, height;
+}
+
+.react-grid-item.resizing {
+  transition: none;
+  z-index: 1;
+  will-change: width, height;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  will-change: transform;
+  opacity: 0.9;
+}
+
+/* Only show resize handles while editing */
+.widget-grid-layout:not(.is-editing) .react-resizable-handle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.widget-grid-layout.is-editing .react-resizable-handle {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  z-index: 20;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 0 0 6px 0;
+  border-right: 4px solid var(--muted-foreground);
+  border-bottom: 4px solid var(--muted-foreground);
+  border-right-color: color-mix(
+    in oklab,
+    var(--muted-foreground) 55%,
+    transparent
+  );
+  border-bottom-color: color-mix(
+    in oklab,
+    var(--muted-foreground) 55%,
+    transparent
+  );
+  opacity: 0.9;
+  transition: opacity 150ms ease, border-color 150ms ease;
+}
+
+.widget-grid-layout.is-editing .react-grid-item:hover > .react-resizable-handle::after {
+  border-right-color: color-mix(
+    in oklab,
+    var(--muted-foreground) 75%,
+    transparent
+  );
+  border-bottom-color: color-mix(
+    in oklab,
+    var(--muted-foreground) 75%,
+    transparent
+  );
+}
+
+.react-grid-item > .react-resizable-handle.react-resizable-handle-se {
+  bottom: -6px;
+  right: -6px;
+  cursor: se-resize;
+}
+
+.react-grid-item > .react-resizable-handle.react-resizable-handle-se::after {
+  right: 6px;
+  bottom: 6px;
+  border-radius: 6px 0 10px 0;
+}
+
+.react-grid-item > .react-resizable-handle.react-resizable-handle-sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: sw-resize;
+}
+
+.react-grid-item > .react-resizable-handle.react-resizable-handle-sw::after {
+  left: 6px;
+  bottom: 6px;
+  border-right: none;
+  border-left: 4px solid var(--muted-foreground);
+  border-left-color: color-mix(
+    in oklab,
+    var(--muted-foreground) 55%,
+    transparent
+  );
+  border-radius: 0 6px 0 10px;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: hsl(var(--primary) / 0.08);
+  border: 2px dashed hsl(var(--primary) / 0.3);
+  border-radius: 0.75rem;
+  opacity: 1;
+  transition-duration: 100ms;
+  z-index: 2;
+  user-select: none;
+}
+
+/* ── Widget grid item ──────────────────────────────────────────────────── */
+
+.widget-grid-item {
+  height: 100%;
+  width: 100%;
+  overflow: visible;
+}
+
+/* When dragging, add a subtle shadow and lift */
+.react-draggable-dragging .widget-grid-item {
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+  border-radius: 0.75rem;
+}

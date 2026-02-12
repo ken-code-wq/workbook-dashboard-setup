@@ -325,7 +325,7 @@ export function LeadsTable() {
   };
 
   return (
-    <div className="bg-card text-card-foreground rounded-xl border overflow-hidden">
+    <div className="bg-card text-card-foreground rounded-xl border overflow-hidden h-full flex flex-col">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3.5 border-b">
         <div className="flex items-center gap-3">
           <h3 className="font-medium text-base">Lead Management</h3>
@@ -710,7 +710,7 @@ export function LeadsTable() {
         </DropdownMenu>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto flex-1 min-h-0">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent bg-muted/30">

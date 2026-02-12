@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -14,7 +13,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
-  SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import {
@@ -255,7 +253,7 @@ export function DashboardSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="px-2.5 pb-3 group-data-[collapsible=icon]:hidden">
+      {/* <SidebarFooter className="px-2.5 pb-3 group-data-[collapsible=icon]:hidden">
         <div className="group/sidebar relative flex flex-col gap-2 rounded-lg border p-4 text-sm w-full bg-background">
           <div className="text-balance text-lg font-semibold leading-tight group-hover/sidebar:underline">
             Open-source layouts by lndev-ui
@@ -282,7 +280,7 @@ export function DashboardSidebar({
             </Link>
           </Button>
         </div>
-      </SidebarFooter>
+      </SidebarFooter> */}
     </Sidebar>
   );
 }

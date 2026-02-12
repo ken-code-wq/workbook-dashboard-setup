@@ -91,7 +91,7 @@ export function TopPerformers() {
   }, [sortBy]);
 
   return (
-    <div className="bg-card text-card-foreground rounded-lg border w-full lg:w-[332px] shrink-0">
+    <div className="bg-card text-card-foreground rounded-xl border w-full h-full flex flex-col">
       <div className="flex items-center justify-between p-4 border-b border-border/50">
         <h3 className="font-medium text-sm sm:text-base">Top Performers</h3>
         <div className="flex items-center gap-1">
@@ -143,7 +143,7 @@ export function TopPerformers() {
           </DropdownMenu>
         </div>
       </div>
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 flex-1 overflow-auto">
         {sortedPerformers.map((performer, index) => {
           const style = barStyles[index % barStyles.length];
           const progressWidth = (performer.score / maxScore) * 100;
