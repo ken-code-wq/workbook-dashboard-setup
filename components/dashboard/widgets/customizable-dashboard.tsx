@@ -19,8 +19,19 @@ const ROW_HEIGHT = 60;
 const MARGIN: [number, number] = [16, 16];
 
 export function CustomizableDashboard() {
-  const { layouts, isEditing, setLayouts, removeWidget, toggleEditing, resetToDefault } =
-    useWidgetLayoutStore();
+  const views = useWidgetLayoutStore((s) => s.views);
+  const activeViewId = useWidgetLayoutStore((s) => s.activeViewId);
+  const isEditing = useWidgetLayoutStore((s) => s.isEditing);
+  const setLayouts = useWidgetLayoutStore((s) => s.setLayouts);
+  const removeWidget = useWidgetLayoutStore((s) => s.removeWidget);
+  const toggleEditing = useWidgetLayoutStore((s) => s.toggleEditing);
+  const resetActiveView = useWidgetLayoutStore((s) => s.resetActiveView);
+
+  // Derive the active view's layouts
+  const layouts = useMemo(() => {
+    const view = views.find((v) => v.id === activeViewId);
+    return view?.layouts ?? [];
+  }, [views, activeViewId]);
 
   // ── Container width measurement for responsive grid ──
   const { width, containerRef } = useContainerWidth({ initialWidth: 1280 });
@@ -137,7 +148,7 @@ export function CustomizableDashboard() {
               variant="outline"
               size="sm"
               className="h-8 gap-1.5"
-              onClick={resetToDefault}
+              onClick={resetActiveView}
             >
               <RotateCcw className="size-3.5" />
               <span>Reset</span>
@@ -204,7 +215,7 @@ export function CustomizableDashboard() {
             Your dashboard is empty. Click &quot;Edit Dashboard&quot; and add
             widgets from the library.
           </p>
-          <Button onClick={resetToDefault} variant="outline" className="gap-2">
+          <Button onClick={resetActiveView} variant="outline" className="gap-2">
             <RotateCcw className="size-4" />
             Restore Defaults
           </Button>
